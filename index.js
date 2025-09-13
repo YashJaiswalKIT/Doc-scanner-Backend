@@ -50,7 +50,7 @@ app.post("/send-otp", async (req, res) => {
     });
 
     console.log(`OTP sent to ${email}: ${otp}`);
-    res.status(200).json({ success: true, message: "OTP sent",otp });
+    res.status(200).json({ success: true, message: "OTP sent"});
   } catch (error) {
     console.error("Failed to send OTP:", error);
     res.status(500).json({ success: false, message: "Failed to send OTP" });
