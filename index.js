@@ -9,7 +9,7 @@ const app = express();
 
 
 app.use(cors({
-  origin: ["http://localhost:3000", "http://192.168.36.67:3000","*"] , 
+  origin: ["http://localhost:3000", "http://192.168.36.67:3000","https://doc-scanner-hxn2r2wxq-yashjaiswalkits-projects.vercel.app"] , 
   credentials: true,
 }));
 
