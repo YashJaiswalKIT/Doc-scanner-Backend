@@ -17,8 +17,8 @@ app.use(cors({
 app.use(express.json());
 
 const PORT = process.env.PORT || 8000;
-const EMAIL_USER = process.env.GMAIL_APP;
-const EMAIL_PASS = process.env.GMAIL_PASS;
+const GMAIL_APP = process.env.GMAIL_APP;
+const GMAIL_PASS = process.env.GMAIL_PASS;
 
 const otpStore = new Map();
 
@@ -37,13 +37,13 @@ app.post("/send-otp", async (req, res) => {
     const transporter = nodemailer.createTransport({
       service: "gmail",
       auth: {
-        user: EMAIL_USER,
-        pass: EMAIL_PASS,
+        user: GMAIL_APP,
+        pass: GMAIL_PASS,
       },
     });
 
     await transporter.sendMail({
-      from: `"SecureDocs Verification OTP" <${EMAIL_USER}>`,
+      from: `"SecureDocs Verification OTP" <${ GMAIL_APP}>`,
       to: email,
       subject: "Your OTP Code",
       html: `<p>Your OTP code is: <b>${otp}</b>. It is valid for 5 minutes.</p>`,
