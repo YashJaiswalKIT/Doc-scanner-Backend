@@ -9,7 +9,7 @@ const app = express();
 
 
 app.use(cors({
-  origin: ["http://localhost:3000", "http://192.168.36.67:3000","https://doc-scanner-hxn2r2wxq-yashjaiswalkits-projects.vercel.app"] , 
+  origin: ["http://localhost:3000", "https://doc-scanner.vercel.app","https://doc-scanner-hxn2r2wxq-yashjaiswalkits-projects.vercel.app","doc-scanner-9shgs0vnr-yashjaiswalkits-projects.vercel.app","doc-scanner-git-main-yashjaiswalkits-projects.vercel.app"] , 
   methods: ["GET", "POST"],
   credentials: true,
 }));
