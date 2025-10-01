@@ -18,7 +18,7 @@ app.use(
       "https://doc-scanner-git-main-yashjaiswalkits-projects.vercel.app",
       "https://doc-scanner-ten.vercel.app",
     ],
-    methods: ["GET", "POST"],
+    // methods: ["GET", "POST"],
     credentials: true,
   })
 );
@@ -48,7 +48,7 @@ app.post("/send-otp", async (req, res) => {
   const otp = Math.floor(100000 + Math.random() * 900000).toString();
 
   // Save OTP with 5-min expiry
-  otpStore.set(email, { otp, expiresAt: Date.now() + 5 * 60 * 1000 });
+  otpStore.set(email, { email,otp});
 
   try {
     const transporter = nodemailer.createTransport({
@@ -60,7 +60,7 @@ app.post("/send-otp", async (req, res) => {
     });
 
     // Verify connection
-    await transporter.verify();
+    // await transporter.verify();
 
     // Send email
     await transporter.sendMail({
