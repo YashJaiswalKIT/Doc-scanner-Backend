@@ -1,54 +1,46 @@
 import express from "express";
 import dotenv from "dotenv";
 import cors from "cors";
-import { Resend } from "resend";
+import nodemailer from "nodemailer";
+
 
 dotenv.config();
 
 const app = express();
 
+// OTP store
+const otpStore = new Map();
+
 app.use(
   cors({
-    origin: [
-      "http://localhost:3000",
-      "https://doc-scanner.vercel.app",
-      "https://doc-scanner-hxn2r2wxq-yashjaiswalkits-projects.vercel.app",
-      "https://doc-scanner-9shgs0vnr-yashjaiswalkits-projects.vercel.app",
-      "https://doc-scanner-git-main-yashjaiswalkits-projects.vercel.app",
-      "https://doc-scanner-ten.vercel.app",
-    ],
+    origin: "*",
     credentials: true,
   })
 );
 
 app.use(express.json());
 
-const PORT = process.env.PORT || 8000;
-const resend = new Resend(process.env.RESEND_API_KEY);
-
-// ✅ In-memory OTP storage with expiry
-const otpStore = new Map();
-
-/**
- * Send OTP Route
- */
+// Send OTP route
 app.post("/send-otp", async (req, res) => {
   const { email } = req.body;
-
   if (!email) {
-    return res
-      .status(400)
-      .json({ success: false, message: "Email is required" });
+    return res.status(400).json({ success: false, message: "Email is required" });
   }
 
   const otp = Math.floor(100000 + Math.random() * 900000).toString();
-
-  // Save OTP with 5 min expiry
   otpStore.set(email, { otp, expiresAt: Date.now() + 5 * 60 * 1000 });
 
   try {
-    await resend.emails.send({
-      from: "SecureDocs <onboarding@resend.dev>", // default from Resend
+    const transporter = nodemailer.createTransport({
+      service: "gmail",
+      auth: {
+        user: process.env.GMAIL_USER,
+        pass: process.env.GMAIL_PASS,
+      },
+    });
+
+    await transporter.sendMail({
+      from: process.env.GMAIL_USER,
       to: email,
       subject: "Your OTP Code",
       html: `<p>Your OTP is: <b>${otp}</b>. It is valid for 5 minutes.</p>`,
@@ -57,42 +49,29 @@ app.post("/send-otp", async (req, res) => {
     console.log(`OTP sent to ${email}: ${otp}`);
     res.status(200).json({ success: true, message: "OTP sent" });
   } catch (error) {
-    console.error(" Failed to send OTP:", error.message);
-    res.status(500).json({
-      success: false,
-      message: "Failed to send OTP",
-      error: error.message,
-    });
+    console.error("Failed to send OTP:", error);
+    res.status(500).json({ success: false, message: "Failed to send OTP", error: error.message });
   }
 });
 
-/**
- * Verify OTP Route
- */
+// Verify OTP route
 app.post("/verify-otp", (req, res) => {
   const { email, otp } = req.body;
-
   if (!email || !otp) {
-    return res
-      .status(400)
-      .json({ success: false, message: "Email and OTP are required" });
+    return res.status(400).json({ success: false, message: "Email and OTP are required" });
   }
 
   const storedData = otpStore.get(email);
 
   if (!storedData) {
-    return res
-      .status(401)
-      .json({ success: false, message: "OTP not found or expired" });
+    return res.status(401).json({ success: false, message: "OTP not found or expired" });
   }
 
   const { otp: storedOtp, expiresAt } = storedData;
 
   if (Date.now() > expiresAt) {
     otpStore.delete(email);
-    return res
-      .status(401)
-      .json({ success: false, message: "OTP expired, request a new one" });
+    return res.status(401).json({ success: false, message: "OTP expired" });
   }
 
   if (storedOtp === otp) {
@@ -103,7 +82,4 @@ app.post("/verify-otp", (req, res) => {
   return res.status(401).json({ success: false, message: "Invalid OTP" });
 });
 
-// ✅ Start server
-app.listen(PORT, () => {
-  console.log(` Server running at http://0.0.0.0:${PORT}`);
-});
+export default app;
