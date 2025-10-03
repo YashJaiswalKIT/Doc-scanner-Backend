@@ -3,18 +3,17 @@ import dotenv from "dotenv";
 import cors from "cors";
 import nodemailer from "nodemailer";
 
-
 dotenv.config();
 
 const app = express();
 
-// OTP store
+// OTP store (⚠ stateless in Vercel; use DB for production)
 const otpStore = new Map();
 
 app.use(
   cors({
     origin: "*",
-    credentials: true,
+    credentials: true
   })
 );
 
@@ -35,22 +34,22 @@ app.post("/send-otp", async (req, res) => {
       service: "gmail",
       auth: {
         user: process.env.GMAIL_USER,
-        pass: process.env.GMAIL_PASS,
-      },
+        pass: process.env.GMAIL_PASS
+      }
     });
 
     await transporter.sendMail({
       from: process.env.GMAIL_USER,
       to: email,
       subject: "Your OTP Code",
-      html: `<p>Your OTP is: <b>${otp}</b>. It is valid for 5 minutes.</p>`,
+      html: `<p>Your OTP is: <b>${otp}</b>. It is valid for 5 minutes.</p>`
     });
 
     console.log(`OTP sent to ${email}: ${otp}`);
-    res.status(200).json({ success: true, message: "OTP sent" });
+    return res.status(200).json({ success: true, message: "OTP sent" });
   } catch (error) {
     console.error("Failed to send OTP:", error);
-    res.status(500).json({ success: false, message: "Failed to send OTP", error: error.message });
+    return res.status(500).json({ success: false, message: "Failed to send OTP", error: error.message });
   }
 });
 
@@ -62,13 +61,11 @@ app.post("/verify-otp", (req, res) => {
   }
 
   const storedData = otpStore.get(email);
-
   if (!storedData) {
     return res.status(401).json({ success: false, message: "OTP not found or expired" });
   }
 
   const { otp: storedOtp, expiresAt } = storedData;
-
   if (Date.now() > expiresAt) {
     otpStore.delete(email);
     return res.status(401).json({ success: false, message: "OTP expired" });
@@ -82,4 +79,5 @@ app.post("/verify-otp", (req, res) => {
   return res.status(401).json({ success: false, message: "Invalid OTP" });
 });
 
+// Vercel handler export
 export default app;
